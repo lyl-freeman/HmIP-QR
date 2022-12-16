@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <h1>QR-Code Text:</h1>
+        <textarea id="key_input" rows="4" cols="200" placeholder="QR-Code Text"></textarea>
+        <h3 id="sgtin_out"></h3>
+        <h3 id="key_out"></h3> 
+    </body>
+
+    <script>
+        const key_input = document.getElementById('key_input');
+        const sgtin_out = document.getElementById('sgtin_out');
+        const key_out = document.getElementById('key_out');
+        const inputHandler = function(e) {
+            let val = e.target.value;
+            sgtin = "SGTIN: ";
+            key = "Key: ";
+            groups = val.match(/(\w{6})(\w{24})(\w{3})(\w{32})/);
+            if (!groups)  {
+                if (val != "") {
+                    sgtin = sgtin + " Eingabe ungültig";
+                }
+            } else {
+                sgtin = sgtin + AddHyphens(groups[2], 4);
+                key = key + AddHyphens(BaseConvert(groups[4], "0123456789ABCDEF", "0123456789ABCEFGHJKLMNPQRSTUWXYZ"), 6, true);
+            };
+            sgtin_out.innerHTML = sgtin;
+            key_out.innerHTML = key;
+        };
+        key_input.addEventListener('input', inputHandler);
+        key_input.addEventListener('propertychange', inputHandler);
+        inputHandler({target: key_input});
+        
+        function BaseConvert(inputStr, alphabet_from, alphabet_to) {
+            var collect = [];
+            let base_from = alphabet_from.length;
+            let base_to = alphabet_to.length;
+        
+            for (let j = 0; j < inputStr.length; j++) {
+                let tmp = alphabet_from.indexOf(inputStr[j]);
+                let i = 0;
+                do {
+                    let nxt = (i < collect.length ? collect[i] : 0) * base_from + tmp;
+                    collect[i] = nxt % base_to;
+                    tmp = Math.trunc(nxt / base_to);
+                    i++;
+                } while ( !(i == collect.length && tmp == 0) );
+            }
+            
+            let result = "";
+            for (let j = collect.length - 1; j >= 0; j--) {
+                let iChar = collect[j];
+                result = result + alphabet_to[iChar];
+            }
+            return result
+        }
+
+        function AddHyphens(inputStr, char_count, skip_last = false) {
+            for (let i = char_count; i < inputStr.length; i=i+char_count+1) {
+                if (skip_last && inputStr.length - i < char_count)
+                    break;
+                inputStr = inputStr.substring(0, i) + '-' + inputStr.substr(i);
+            }
+            return inputStr;
+        }
+    </script>
+</html>
